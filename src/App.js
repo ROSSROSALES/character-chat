@@ -7,20 +7,38 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const chatContainerRef = useRef(null);
 
-  const handleSend = () => {
-    if (input.trim()) {
-      // Add user message to chat
-      setMessages([...messages, { text: input, sender: 'user' }]);
+  const [loading, setLoading] = useState(false);
 
-      // Mock AI response (replace with API call later)
-      setTimeout(() => {
+  const handleSend = async () => {
+    if (input.trim()) {
+      setMessages([...messages, { text: input, sender: 'user' }]);
+      setLoading(true);
+
+      try {
+        const response = await fetch('/.netlify/functions/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: input }),
+        });
+
+        const data = await response.json();
+        if (data.reply) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: data.reply, sender: 'ai' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error:', error);
         setMessages((prevMessages) => [
           ...prevMessages,
-          { text: `You said: "${input}"`, sender: 'ai' },
+          { text: 'Sorry, something went wrong.', sender: 'ai' },
         ]);
-      }, 500);
+      }
 
-      // Clear input
+      setLoading(false);
       setInput('');
     }
   };
@@ -117,8 +135,9 @@ const App = () => {
           color="primary"
           onClick={handleSend}
           endIcon={<SendIcon />}
+          disabled={loading}
         >
-          Send
+          {loading ? 'Thinking...' : 'Send'}
         </Button>
       </Box>
     </Box>
