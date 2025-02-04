@@ -12,6 +12,12 @@ const LandingPage = () => {
     }
   };
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handleStartChat();
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -34,6 +40,7 @@ const LandingPage = () => {
         variant="outlined"
         value={characterName}
         onChange={(e) => setCharacterName(e.target.value)}
+        onKeyDown={handleKeyDown}
         sx={{ marginBottom: '20px', width: '300px' }}
       />
       <Button
