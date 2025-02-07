@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box, TextField, Button, Avatar, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
@@ -6,7 +6,7 @@ import SendIcon from '@mui/icons-material/Send';
 const ChatPage = () => {
   const location = useLocation();
   const characterName = location.state?.characterName || 'AI';
-  const [initialPrompt, setInitialPrompt] = useState('Act like this character ');
+  const [initialPrompt, setInitialPrompt] = useState(`Pretend you are ${characterName} lets have a conversation`);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const chatContainerRef = useRef(null);
@@ -14,7 +14,7 @@ const ChatPage = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const initialPromptSend = async () => {
+  const initialPromptSend = useCallback(async () => {
     if (initialPrompt) {
       try {
         const response = await fetch('/.netlify/functions/chat', {
@@ -22,7 +22,7 @@ const ChatPage = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: initialPrompt + characterName }),
+          body: JSON.stringify({ message: initialPrompt}),
         });
 
         const data = await response.json();
@@ -43,7 +43,7 @@ const ChatPage = () => {
       setLoading(false);
       setInput('');
     }
-  }
+  }, [initialPrompt]);
 
   const handleSend = async () => {
     if (input.trim()) {
@@ -87,7 +87,7 @@ const ChatPage = () => {
       setInitialPrompt("");
       initialPromptRun.current = true;
     }
-  }, []);
+  }, [initialPromptSend]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
