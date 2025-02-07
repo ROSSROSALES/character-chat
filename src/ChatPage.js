@@ -6,11 +6,44 @@ import SendIcon from '@mui/icons-material/Send';
 const ChatPage = () => {
   const location = useLocation();
   const characterName = location.state?.characterName || 'AI';
+  const [initialPrompt, setInitialPrompt] = useState('Act like this character ');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const chatContainerRef = useRef(null);
+  const initialPromptRun = useRef(false);
 
   const [loading, setLoading] = useState(false);
+
+  const initialPromptSend = async () => {
+    if (initialPrompt) {
+      try {
+        const response = await fetch('/.netlify/functions/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: initialPrompt + characterName }),
+        });
+
+        const data = await response.json();
+        if (data.reply) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { text: data.reply, sender: 'ai' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { text: 'Sorry, something went wrong.', sender: 'ai' },
+        ]);
+      }
+
+      setLoading(false);
+      setInput('');
+    }
+  }
 
   const handleSend = async () => {
     if (input.trim()) {
@@ -46,6 +79,16 @@ const ChatPage = () => {
     }
   };
 
+  // send character and prompt to API
+  // start conversation with character speaking first
+  useEffect(() => {
+    if (!initialPromptRun.current){
+      initialPromptSend();
+      setInitialPrompt("");
+      initialPromptRun.current = true;
+    }
+  }, []);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -79,7 +122,7 @@ const ChatPage = () => {
       >
         <Avatar
           alt="AI Avatar"
-          src="https://via.placeholder.com/150" // Replace with your image URL
+          src="" // Replace image URL
           sx={{ width: 56, height: 56 }}
         />
         <Typography variant="h5">{characterName}</Typography>
