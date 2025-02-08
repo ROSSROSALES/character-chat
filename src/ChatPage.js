@@ -22,7 +22,7 @@ const ChatPage = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: initialPrompt}),
+          body: JSON.stringify({ messages: [{ role: "user", content: initialPrompt }]}),
         });
 
         const data = await response.json();
@@ -47,18 +47,32 @@ const ChatPage = () => {
 
   const handleSend = async () => {
     if (input.trim()) {
-      setMessages([...messages, { text: input, sender: 'user' }]);
+      const userMessage = { text: input, sender: 'user' };
+      setMessages((prevMessages) => [...prevMessages, userMessage]);
       setLoading(true);
-
+  
       try {
+        const conversationHistory = messages.map((msg) => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.text,
+        }));
+  
+        conversationHistory.push({ role: 'user', content: input });
+  
+        console.log('Request Payload:', JSON.stringify({ messages: conversationHistory }));
+  
         const response = await fetch('/.netlify/functions/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: input }),
+          body: JSON.stringify({ messages: conversationHistory }),
         });
-
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
         const data = await response.json();
         if (data.reply) {
           setMessages((prevMessages) => [
@@ -73,7 +87,7 @@ const ChatPage = () => {
           { text: 'Sorry, something went wrong.', sender: 'ai' },
         ]);
       }
-
+  
       setLoading(false);
       setInput('');
     }
