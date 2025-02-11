@@ -6,12 +6,12 @@ import SendIcon from '@mui/icons-material/Send';
 const ChatPage = () => {
   const location = useLocation();
   const characterName = location.state?.characterName || 'AI';
-  const [initialPrompt, setInitialPrompt] = useState(`Pretend you are ${characterName} lets have a conversation`);
+  const characterSetUp = `You are an AI assistant designed to have a natural and engaging conversation with the user. You will Use ${characterName}'s history, characteristics, and preferences to provide accurate and personalized responses and act as ${characterName}. Ask follow-up questions to the user to keep the conversation flowing and show genuine interest in the user's thoughts and experiences.`
+  const [initialPrompt, setInitialPrompt] = useState(characterSetUp);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const chatContainerRef = useRef(null);
   const initialPromptRun = useRef(false);
-
   const [loading, setLoading] = useState(false);
 
   const initialPromptSend = useCallback(async () => {
